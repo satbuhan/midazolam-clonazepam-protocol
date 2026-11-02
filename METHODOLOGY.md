@@ -294,6 +294,66 @@ number), omit that detail rather than guess it — a citation with a missing
 end page is honest; a citation with a guessed one is not, even if the
 guess turns out to be right.
 
+### Agent (drug) name emphasis
+
+At Dr. Özgür Karcıoğlu's request (2026-11-02, relayed while building
+`midazolam-clonazepam-protocol`), every tool now visually emphasises
+clinical agent (drug) names — bold, the page's one existing `--accent`
+color (already used for emphasis elsewhere: active nodes, edge labels,
+so this reads as "the atlas's emphasis," not a second system) — both
+inside the diagram boxes and in the readout panel's prose. This is a
+rendering-only concern layered on top of existing content; it never
+changes `label`/`sub`/`meaning`/`rationale`/`cautions` text itself, so it
+does not touch the one-invariant fidelity rule.
+
+Three pieces, same in every tool:
+
+1. **content.js**: a new `AGENTS` array — a flat list of agent-name
+   strings, e.g. `["Midazolam", "Clonazepam", "Lorazepam", ...]`. Derive
+   this list mechanically, not from memory: grep every NODES field
+   (`label`, `sub`, `meaning`, `rationale`, `cautions`) for the specific
+   drug names this tool's own algorithm and evidence actually mention,
+   rather than assuming a reused list from another tool. Include every
+   agent named, not just the one or two headline drugs — a secondary
+   agent mentioned once in a `rationale` (e.g. a second-line or rescue
+   drug) is still worth the same emphasis. Case doesn't matter for
+   matching (see below), so list each name once in natural case.
+
+2. **app.js**: two pieces of rendering logic, both keyed off `AGENTS`:
+   - `highlightAgentsHtml(rawText)` — escapes the text, then wraps every
+     case-insensitive, whole-word match of any `AGENTS` entry (longest
+     name first, so e.g. "Fosphenytoin" is never partially matched by
+     "Phenytoin") in a plain, non-interactive `<strong class="agent-name">`.
+     Used for `n.label`/`n.sub` wherever they render — inside the node
+     `<button>` in `nodeEl()`, and again for the readout panel's title/sub
+     — via `.innerHTML`, not `.textContent`. Non-interactive is required
+     here specifically: a node's label/sub render inside a `<button>`
+     element, and a glossary term's own `<button class="term">` markup
+     cannot nest inside another button (invalid HTML, breaks click
+     handling), which is exactly why box text never got glossary-term
+     auto-linking even before this change.
+   - `linkify()` (the existing glossary-term auto-linker used for
+     `meaning`/`rationale`/`cautions`) gets a second candidate pool added
+     to its single left-to-right match loop: alongside glossary terms
+     (matched once per term, deduped via `usedTerms` — a repeated
+     clickable button for a common phrase would be noisy), agent names
+     are matched on every occurrence, never deduped, since plain emphasis
+     repeating through a paragraph is fine and desirable. Each loop
+     iteration picks the overall earliest (then longest) match across
+     both pools, so a glossary term and an agent name are never
+     double-processed or allowed to overlap.
+
+3. **style.css**: one rule,
+   `.agent-name { color: var(--accent); font-weight: 700; }` — reuses
+   the page's existing accent token, so no new color variable needed in
+   any tool that already has one (every tool in this atlas does).
+
+QA this exactly like any other change: `node --check` on both files,
+then a Playwright pass confirming `.node .agent-name` and
+`.readout .agent-name` both have matches after opening a node, zero
+console/page errors, and a visual screenshot review — agent names should
+read as clearly emphasised without the diagram looking cluttered.
+
 ### External verification (an alternative to in-session WebSearch)
 
 The in-session, Claude-does-every-search approach above works but doesn't
