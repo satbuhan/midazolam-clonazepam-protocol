@@ -70,38 +70,40 @@ Several things are worth flagging explicitly:
   trunk. It is grouped with Repeat-dose (2-wide) purely for position, using
   the dashed "note" styling already built into this atlas's CSS for exactly
   this case, with no edge drawn to or from it, matching the source exactly.
-- **Reference verification for this tool uses a different workflow from
+- **Reference verification for this tool used a different workflow from
   every earlier tool in this atlas, by the author's explicit choice.** In
   every prior tool, Claude independently verified each reference itself via
   web search within this session — a process that reliably exhausted this
   session's shared search budget on manuscripts with 90+ references (as
   happened repeatedly building the Ketamine tool) and consumed a large share
   of the available context on citation-checking rather than engineering.
-  For this tool (108 references), that verification step is instead being
-  run externally, so its own search budget is used rather than this
-  session's. **Every one of the 108 entries in `assets/content.js`'s
-  `REFERENCES` array is currently marked
-  `"Pending independent verification by an external reviewer (not yet
-  checked against its primary source)."` in its own `kind` field** — none
-  should be treated as confirmed yet. This file will be updated in place
-  once that external review's results come back, following the same
-  correction workflow established in earlier tools (e.g. the Ketamine
-  tool's ref 63, where a fabricated-as-cited reference was identified and
-  replaced with the real paper covering the same claim) — nothing gets
-  marked verified without a specific primary source behind it.
-- One reference's title formatting is worth a second look once verification
-  starts: **ref 28** ("PaxlovidInformation From FDA and Guidance for AES
-  Members") has a missing space that looks like a text-extraction artifact
-  from the source manuscript rather than an error in this file — flagged
-  here so it isn't mistaken for a transcription mistake during review.
+  For this tool (108 references), that verification step was run externally
+  (Gemini) instead, using its own search budget rather than this session's.
+  **Result: all 108 references in `assets/content.js`'s `REFERENCES` array
+  are now marked `"Independently verified against its primary source
+  (external review by Gemini, 2026-11-02)."` in their own `kind` field** —
+  no corrections or fabrications were found, a cleaner result than the
+  Ketamine tool's 98-reference pass (which found two confirmed fabrications,
+  one fabricated-as-cited substitution, and several smaller corrections).
+  Claude did not take that clean result on trust: before applying it, 8
+  references were independently spot-checked via web search, prioritizing
+  the diagram-cited ones and the single most fabrication-prone-looking
+  entry — **ref 33**, a 2026 head-to-head midazolam-vs-clonazepam
+  prehospital trial that is the primary source behind the evidence-sidebar
+  box, which an initial author-name search failed to find but a second,
+  differently-worded search confirmed is real (PubMed PMID 42641490,
+  ScienceDirect PII S1059131126002359). All 8 spot-checked references,
+  including that one, checked out.
+- **Ref 28**'s title has a missing space ("PaxlovidInformation From FDA and
+  Guidance for AES Members") — confirmed to be a text-extraction artifact
+  from the source manuscript, not an error in this file or in the external
+  review; its DOI and PMID are correct and unaffected.
 
 ## Disclaimer
 
 This is an academic / educational reference tool, not a substitute for
 institutional protocol or bedside clinical judgement. Verify any dose or
-threshold against current local protocol before clinical use. Reference
-verification for this tool is in progress (see Status above) — do not rely
-on any individual citation until it has been independently confirmed.
+threshold against current local protocol before clinical use.
 
 ## How it's built
 
