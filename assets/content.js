@@ -315,3 +315,24 @@ const GLOSSARY = [
     def: "A trial designed to show that a new treatment is not unacceptably worse than an existing one by more than a prespecified margin, rather than to show it is better — the design used for this review's one direct midazolam-versus-clonazepam comparison."
   }
 ];
+
+// Clinical agent (drug) names to visually emphasise wherever they appear —
+// in the diagram boxes themselves and in the readout panel's prose. This
+// is a rendering-only concern (app.js wraps each match in a styled span at
+// render time); it never touches label/sub, which stay byte-exact as
+// authored. Matching is case-insensitive and whole-word, longest name
+// first, so "Fosphenytoin" is never partially matched by "Phenytoin".
+// Added at Dr. Özgür Karcıoğlu's request, 2026-11-02 — see METHODOLOGY.md.
+const AGENTS = [
+  "Midazolam",
+  "Clonazepam",
+  "Lorazepam",
+  "Diazepam",
+  "Fosphenytoin",
+  "Phenytoin",
+  "Levetiracetam",
+  "Valproate",
+  "Haloperidol",
+  "Droperidol",
+  "Promethazine"
+];

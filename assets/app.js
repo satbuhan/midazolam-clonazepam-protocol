@@ -96,6 +96,45 @@
   // longest match first, so a longer term wins over any shorter overlapping one
   const GLOSSARY_SORTED = GLOSSARY.slice().sort((a, b) => b.match.length - a.match.length);
 
+  /* ---- agent (drug) name emphasis ----
+     Rendering-only: wraps every case-insensitive, whole-word occurrence of
+     a name in AGENTS (content.js) in a plain <strong class="agent-name">
+     span — never a link/button, since this also runs inside the diagram
+     .node <button>, where a nested interactive element would be invalid
+     HTML. Unlike glossary terms, every occurrence is wrapped, not just the
+     first, and label/sub text itself is never altered — only how it's
+     rendered. */
+  const AGENTS_SORTED = (typeof AGENTS !== "undefined" ? AGENTS : [])
+    .slice()
+    .sort((a, b) => b.length - a.length);
+
+  function highlightAgentsHtml(rawText) {
+    const text = escapeHtml(rawText);
+    let result = "";
+    let cursor = 0;
+    while (cursor < text.length) {
+      let best = null;
+      for (const name of AGENTS_SORTED) {
+        const re = new RegExp("\\b" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+        const m = re.exec(text.slice(cursor));
+        if (
+          m &&
+          (!best || m.index < best.index || (m.index === best.index && m[0].length > best.text.length))
+        ) {
+          best = { index: m.index, text: m[0] };
+        }
+      }
+      if (!best) break;
+      const matchStart = cursor + best.index;
+      const matchEnd = matchStart + best.text.length;
+      result += text.slice(cursor, matchStart);
+      result += '<strong class="agent-name">' + best.text + "</strong>";
+      cursor = matchEnd;
+    }
+    result += text.slice(cursor);
+    return result;
+  }
+
   /* ---- cross-atlas concept links ----
      A term that's independently glossary-defined in 2+ tools (checked and
      curated by hand when the index was built — same string, same clinical
@@ -138,7 +177,11 @@
     const text = escapeHtml(rawText);
     let result = "";
     let cursor = 0;
-    // find the earliest, longest unused glossary match from `cursor` onward
+    // find the earliest, longest match from `cursor` onward across both
+    // candidate pools: glossary terms (once per term, via usedTerms — a
+    // repeated clickable button for a common phrase would be noisy) and
+    // agent names (every occurrence, never deduped — plain emphasis, not
+    // an interactive element, so repeating it is fine and desired).
     while (cursor < text.length) {
       let best = null;
       for (const g of GLOSSARY_SORTED) {
@@ -149,25 +192,39 @@
           m &&
           (!best || m.index < best.index || (m.index === best.index && m[0].length > best.text.length))
         ) {
-          best = { index: m.index, text: m[0], g };
+          best = { index: m.index, text: m[0], kind: "term", g };
+        }
+      }
+      for (const name of AGENTS_SORTED) {
+        const re = new RegExp("\\b" + name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
+        const m = re.exec(text.slice(cursor));
+        if (
+          m &&
+          (!best || m.index < best.index || (m.index === best.index && m[0].length > best.text.length))
+        ) {
+          best = { index: m.index, text: m[0], kind: "agent" };
         }
       }
       if (!best) break;
       const matchStart = cursor + best.index;
       const matchEnd = matchStart + best.text.length;
       result += text.slice(cursor, matchStart);
-      const g = best.g;
-      const label = g.full ? g.full[0].toUpperCase() + g.full.slice(1) : "";
-      result +=
-        '<button type="button" class="term" aria-expanded="false">' +
-        best.text +
-        "</button>" +
-        '<span class="term-def" hidden>' +
-        (g.full ? "<strong>" + escapeHtml(label) + "</strong> — " : "") +
-        escapeHtml(g.def) +
-        crossLinksHtml(g.match) +
-        "</span>";
-      usedTerms.add(g.match);
+      if (best.kind === "agent") {
+        result += '<strong class="agent-name">' + best.text + "</strong>";
+      } else {
+        const g = best.g;
+        const label = g.full ? g.full[0].toUpperCase() + g.full.slice(1) : "";
+        result +=
+          '<button type="button" class="term" aria-expanded="false">' +
+          best.text +
+          "</button>" +
+          '<span class="term-def" hidden>' +
+          (g.full ? "<strong>" + escapeHtml(label) + "</strong> — " : "") +
+          escapeHtml(g.def) +
+          crossLinksHtml(g.match) +
+          "</span>";
+        usedTerms.add(g.match);
+      }
       cursor = matchEnd;
     }
     result += text.slice(cursor);
@@ -198,13 +255,13 @@
 
     const title = document.createElement("span");
     title.className = "node__title";
-    title.textContent = n.label;
+    title.innerHTML = highlightAgentsHtml(n.label);
     btn.appendChild(title);
 
     if (n.sub) {
       const sub = document.createElement("span");
       sub.className = "node__sub";
-      sub.textContent = n.sub;
+      sub.innerHTML = highlightAgentsHtml(n.sub);
       btn.appendChild(sub);
     }
 
@@ -273,8 +330,8 @@
 
     let html = "";
     html += '<p class="readout__tag">' + escapeHtml(n.type) + "</p>";
-    html += '<h2 class="readout__title">' + escapeHtml(n.label) + "</h2>";
-    if (n.sub) html += '<p class="readout__sub">' + escapeHtml(n.sub) + "</p>";
+    html += '<h2 class="readout__title">' + highlightAgentsHtml(n.label) + "</h2>";
+    if (n.sub) html += '<p class="readout__sub">' + highlightAgentsHtml(n.sub) + "</p>";
     html += "<h3>What this means</h3><p>" + linkify(n.meaning, usedTerms) + "</p>";
     html += "<h3>Why</h3><p>" + linkify(n.rationale, usedTerms) + "</p>";
     if (n.cautions && n.cautions.length) {
