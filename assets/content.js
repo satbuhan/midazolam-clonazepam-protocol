@@ -28,6 +28,11 @@
 // locatable papers; the full external review results and evidence trail
 // are kept outside this repo.
 
+// Date this tool's content and citations were last built/checked
+// together (see assets/app.js's References summary, and the hub
+// README's "Content search index"-adjacent conventions doc).
+const VERIFIED = "2026-11-02";
+
 const REFERENCES = [
   { id: 1, kind: "Independently verified against its primary source (external review by Gemini, 2026-11-02).", text: "Trinka, E., Cock, H., Hesdorffer, D., Rossetti, A.O., Scheffer, I.E., Shinnar, S., et al. (2015) 'A definition and classification of status epilepticus – Report of the ILAE Task Force on Classification of Status Epilepticus', Epilepsia, 56(10), pp. 1515–23. https://doi.org/10.1111/epi.13121 (PMID: 26336950)", url: "https://doi.org/10.1111/epi.13121" },
   { id: 2, kind: "Independently verified against its primary source (external review by Gemini, 2026-11-02).", text: "Betjemann, J.P. and Lowenstein, D.H. (2015) 'Status epilepticus in adults', The Lancet Neurology, 14(6), pp. 615–624. https://doi.org/10.1016/S1474-4422(15)00042-3 (PMID: 25908090)", url: "https://doi.org/10.1016/S1474-4422(15)00042-3" },
